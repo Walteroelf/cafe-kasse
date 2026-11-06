@@ -154,6 +154,34 @@
   .vorrat-reihe button:active { transform: scale(.92); background: rgba(255,255,255,.7); }
   .vorrat-titel { font-size: 20px; color: var(--muted); margin: 0 0 -4px; font-weight: 700; }
   .geldbild svg { display: block; max-width: 100%; height: auto; }
+  /* Bezahl-Ansicht: Kauf-Artikel + Gesamtbetrag */
+  .bill-body { flex: 1; overflow-y: auto; padding: 14px 18px; display: flex; flex-direction: column; gap: 14px; align-items: center; -webkit-overflow-scrolling: touch; }
+  .bill-items { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; max-width: 1000px; }
+  .bcard { width: 170px; background: var(--card); border-radius: 18px; overflow: hidden; box-shadow: 0 4px 0 var(--line); text-align: center; }
+  .bph { width: 100%; aspect-ratio: 4/3; background: #efe9da center/cover no-repeat; display: flex; align-items: center; justify-content: center; color: #b9b19c; }
+  .bph svg { width: 44px; height: 44px; }
+  .bname { font-weight: 700; font-size: 21px; padding: 8px 8px 0; line-height: 1.15; }
+  .bprice { font-size: 20px; color: var(--muted); padding: 2px 8px 10px; }
+  .bill-items.klein { gap: 8px; }
+  .bill-items.klein .bcard { width: 78px; border-radius: 12px; }
+  .bill-items.klein .bname, .bill-items.klein .bprice { display: none; }
+  .bill-items.klein .bph svg { width: 28px; height: 28px; }
+  .bill-total { background: var(--gelb); border-radius: 22px; padding: 12px 30px; display: flex; align-items: baseline; gap: 22px; }
+  .bill-total span { font-size: 30px; font-weight: 700; }
+  .bill-total b { font-family: var(--anzeige); font-size: 60px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .popup-sub { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 10px 24px; background: var(--gelb); font-size: 24px; font-weight: 700; }
+  .popup-sub b { font-family: var(--anzeige); font-size: 32px; font-weight: 900; }
+  .popup-sub .st { font-family: var(--anzeige); font-weight: 800; font-size: 26px; padding: 6px 16px; border-radius: 14px; }
+  .popup-sub .st.fehlt { background: var(--orange-h); color: #8a5300; }
+  .popup-sub .st.genug { background: var(--gruen-h); color: var(--gruen-d); }
+  .popup-x { width: 56px; height: 56px; border-radius: 28px; background: rgba(255,255,255,.25); color: #fff; font-size: 34px; font-weight: 900; line-height: 1; flex: none; }
+  .rueck-gross .rbox.ergebnis b { font-size: 76px; line-height: 1.1; }
+  .rueck-gross + .rueck-titel { font-size: 30px; margin: 0; }
+  #changeArea .gruppe { padding: 12px 18px 8px; gap: 4px; }
+  #changeArea .gruppe .mal { font-size: 40px; }
+  .rueck-gross .rbox.ergebnis { padding: 14px 44px; }
+  #changeArea { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
   /* Pop-up: Geld auswählen */
   .popup-bg { position: fixed; inset: 0; background: rgba(37,52,63,.55); z-index: 20; display: flex; align-items: center; justify-content: center; padding: 14px; }
   .popup { background: var(--bg); border-radius: 30px; width: 100%; max-width: 1000px; max-height: 100%; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
@@ -190,7 +218,8 @@
   .gruppe .mal { font-family: "Andika", sans-serif; font-weight: 700; font-size: 48px; color: var(--gruen-d); line-height: 1; }
   .passend { background: var(--gruen-h); color: var(--gruen-d); border-radius: 26px; padding: 26px 40px; font-family: var(--anzeige); font-weight: 900; font-size: 40px; display: flex; align-items: center; gap: 20px; text-align: center; }
   .passend svg { width: 64px; height: 64px; flex: none; }
-  .done .actions { justify-content: center; }
+  .done .actions, .done-actions { justify-content: center; }
+  .done-actions .gruen { margin-left: 0 !important; }
   .done .actions .gruen { margin-left: 0; }
 
   /* ---------- Artikel-Verwaltung ---------- */
@@ -369,99 +398,78 @@
 
   function openPayment() {
     const total = cartTotal();
-    let given = [];
+    let given = [], paid = false;
     const sum = () => given.reduce((a, b) => a + b, 0);
     const host = $('overlayHost');
+
+    // jede gekaufte Sache einzeln: 2× Brötchen = 2 Fotos
+    const cards = items.flatMap(it => Array.from({ length: cart[it.id] || 0 }, () => it)).map(it =>
+      `<div class="bcard"><div class="bph" ${it.photo ? `style="background-image:url('${it.photo}')"` : ''}>${it.photo ? '' : ICON_BILD}</div>
+       <div class="bname">${esc(it.name)}</div><div class="bprice">${fmt(it.price)}</div></div>`).join('');
 
     host.innerHTML = `<div class="overlay">
       <div class="overlay-head">
         <button class="homebtn" id="pBack"><svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg>Zurück</button>
         <h2>Bezahlen</h2>
       </div>
-      <div class="pay-grid">
-        <div class="kosten"><span>Das kostet:</span><b>${fmt(total)}</b></div>
-        <div class="teller">
-          <div class="teller-t">Das gibt der Kunde:</div>
-          <div class="teller-inhalt" id="tInhalt"></div>
-          <div class="teller-hinweis" id="tHinweis">Tippe aufs Geld, um es wieder wegzunehmen.</div>
-          <div class="teller-summe"><span>Zusammen:</span><b id="tSumme"></b></div>
-        </div>
-        <div class="status" id="tStatus"></div>
+      <div class="bill-body">
+        <div class="bill-items" id="billItems">${cards}</div>
+        <div class="bill-total"><span>Gesamt:</span><b>${fmt(total)}</b></div>
+        <div id="changeArea"></div>
       </div>
-      <div class="actions">
-        <button class="btn orange" id="pExact">Genau passend</button>
-        <button class="btn blau gross" id="pAdd">＋ Geld wählen</button>
-        <button class="btn gruen gross" id="pOk">Fertig ➜</button>
-      </div>
+      <div class="actions" id="pActions"><button class="btn blau gross" id="pAdd">＋ Geld wählen</button></div>
     </div>`;
 
-    function update() {
-      const g = sum(), diff = g - total;
-      const sorted = given.slice().sort((a, b) => b - a);
-      $('tInhalt').innerHTML = sorted.length
-        ? sorted.map(v => `<button data-weg="${v}" aria-label="${geldName(v)} wegnehmen">${geldBild(v, 2.3, 3)}</button>`).join('')
-        : '<div class="teller-leer">Noch nichts. Tippe auf <b>Geld wählen</b>.</div>';
-      $('tHinweis').classList.toggle('hidden', !given.length);
-      $('tSumme').textContent = fmt(g);
-      const st = $('tStatus');
-      if (!given.length) { st.className = 'status leer'; st.textContent = 'Wie viel Geld gibt der Kunde?'; }
-      else if (diff < 0) { st.className = 'status fehlt'; st.innerHTML = `Es fehlen noch ${fmt(-diff)}`; }
-      else { st.className = 'status genug'; st.innerHTML = ICON_HAKEN + 'Das ist genug Geld!'; }
-      $('pOk').disabled = !(given.length && diff >= 0);
-    }
-
-    // Pop-up: nur das Geld, groß
+    // Pop-up „Das Geld bezahlt der Kunde“
     function geldWaehlen() {
       const bg = document.createElement('div');
       bg.className = 'popup-bg';
       const knopf = v => `<button data-v="${v}" aria-label="${geldName(v)}">${geldBild(v, ...(window.innerWidth >= 900 ? [3.6, 4.6] : [3, 3.8]))}<span class="cnt hidden"></span></button>`;
       bg.innerHTML = `<div class="popup">
-        <div class="popup-kopf"><h3>Tippe auf das Geld</h3><div class="sum">Gegeben<b id="pSum"></b></div></div>
+        <div class="popup-kopf"><h3>Das Geld bezahlt der Kunde</h3><div class="sum">Gegeben<b id="pSum"></b></div><button class="popup-x" id="pX" aria-label="Schließen">✕</button></div>
+        <div class="popup-sub"><span>Es kostet <b>${fmt(total)}</b></span><span class="st" id="pSt"></span></div>
         <div class="popup-body">
           <div class="vorrat-reihe">${SCHEINE.map(knopf).join('')}</div>
           <div class="vorrat-reihe muenzen">${MUENZEN.map(knopf).join('')}</div>
         </div>
         <div class="popup-fuss">
           <button class="btn" id="pUndo">↶ Eins zurück</button>
+          <button class="btn orange" id="pExact">Genau passend</button>
           <button class="btn gruen gross" id="pClose">Fertig ✓</button>
         </div>
       </div>`;
       document.body.appendChild(bg);
       const refresh = () => {
-        $('pSum').textContent = fmt(sum());
+        const g = sum(), diff = g - total, st = $('pSt');
+        $('pSum').textContent = fmt(g);
         bg.querySelectorAll('[data-v]').forEach(b => {
           const n = given.filter(v => v === +b.dataset.v).length, c = b.querySelector('.cnt');
           c.textContent = n; c.classList.toggle('hidden', !n);
         });
         $('pUndo').disabled = !given.length;
+        if (!given.length) { st.className = 'st'; st.textContent = ''; }
+        else if (diff < 0) { st.className = 'st fehlt'; st.textContent = `Es fehlen noch ${fmt(-diff)}`; }
+        else { st.className = 'st genug'; st.textContent = '✓ Genug Geld!'; }
+        $('pClose').disabled = !(given.length && diff >= 0);
       };
-      bg.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { given.push(+b.dataset.v); refresh(); update(); });
-      $('pUndo').onclick = () => { given.pop(); refresh(); update(); };
-      $('pClose').onclick = () => bg.remove();
+      bg.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { given.push(+b.dataset.v); refresh(); });
+      $('pUndo').onclick = () => { given.pop(); refresh(); };
+      $('pExact').onclick = () => { given = greedy(total); refresh(); };
+      $('pX').onclick = () => bg.remove();
+      $('pClose').onclick = () => { bg.remove(); zeigeRueckgeld(); };
       refresh();
     }
 
-    $('tInhalt').onclick = e => {
-      const b = e.target.closest('[data-weg]');
-      if (b) { const i = given.indexOf(+b.dataset.weg); if (i >= 0) given.splice(i, 1); update(); }
-      else if (!given.length) geldWaehlen();
-    };
-    $('pBack').onclick = () => host.innerHTML = '';
-    $('pAdd').onclick = geldWaehlen;
-    $('pExact').onclick = () => { given = greedy(total); update(); };
-    $('pOk').onclick = () => showChange(sum(), total);
-    update();
-  }
-
-  // ---------- Rückgeld ----------
-  function showChange(g, total) {
-    const change = g - total;
-    const parts = []; let rest = change;
-    for (const v of ALLES) { const n = Math.floor(rest / v); if (n) { parts.push({ v, n }); rest -= n * v; } }
-    $('overlayHost').innerHTML = `<div class="overlay done">
-      <div class="overlay-head"><h2>Rückgeld</h2></div>
-      <div class="done-body">
-        <div class="rechnung">
+    // Nach Bestätigung: wieder die Kauf-Artikel, dazu das Rückgeld groß
+    function zeigeRueckgeld() {
+      paid = true;
+      const g = sum(), change = g - total;
+      const parts = []; let rest = change;
+      for (const v of ALLES) { const n = Math.floor(rest / v); if (n) { parts.push({ v, n }); rest -= n * v; } }
+      $('pBack').classList.add('hidden');
+      $('billItems').classList.add('klein');
+      $('changeArea').innerHTML = `
+        <div class="rechnung rueck-gross">
           <div class="rbox"><span>Der Kunde gibt</span><b>${fmt(g)}</b></div>
           <div class="zeichen">−</div>
           <div class="rbox"><span>Es kostet</span><b>${fmt(total)}</b></div>
@@ -470,12 +478,17 @@
         </div>
         ${change > 0
           ? `<h3 class="rueck-titel">Das bekommt der Kunde zurück:</h3>
-             <div class="rueck">${parts.map(p => `<div class="gruppe">${geldBild(p.v, 3, 3.8)}<div class="mal">${p.n} ×</div></div>`).join('')}</div>`
-          : `<div class="passend">${ICON_HAKEN}Genau passend!<br>Es gibt kein Rückgeld.</div>`}
-      </div>
-      <div class="actions"><button class="btn gruen gross" id="next">Nächster Kunde ➜</button></div>
-    </div>`;
-    $('next').onclick = () => { cart = {}; $('overlayHost').innerHTML = ''; renderKasse(); };
+             <div class="rueck">${parts.map(p => `<div class="gruppe">${geldBild(p.v, 2.8, 3.5)}<div class="mal">${p.n} ×</div></div>`).join('')}</div>`
+          : `<div class="passend">${ICON_HAKEN}Genau passend!<br>Es gibt kein Rückgeld.</div>`}`;
+      $('pActions').innerHTML = '<button class="btn gruen gross" id="next">Nächster Kunde ➜</button>';
+      $('pActions').classList.add('done-actions');
+      $('next').onclick = () => { cart = {}; host.innerHTML = ''; renderKasse(); };
+      $('billItems').parentNode.scrollTop = 0;
+    }
+
+    $('pBack').onclick = () => host.innerHTML = '';
+    $('pAdd').onclick = geldWaehlen;
+    geldWaehlen();   // Pop-up öffnet gleich
   }
 
   // ---------- Artikel-Verwaltung ----------
