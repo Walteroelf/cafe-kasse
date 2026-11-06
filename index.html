@@ -7,152 +7,258 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Café-Kasse">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#fbf7ee">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-180.png">
 <title>Café-Kasse</title>
 <style>
+  @font-face { font-family: "Andika"; font-weight: 400; font-display: swap; src: url("schriften/andika-400.woff2") format("woff2"); }
+  @font-face { font-family: "Andika"; font-weight: 700; font-display: swap; src: url("schriften/andika-700.woff2") format("woff2"); }
+  @font-face { font-family: "Grandstander"; font-weight: 700 900; font-display: swap; src: url("schriften/grandstander.woff2") format("woff2"); }
+
   :root {
-    --bg: #f4f4f2; --card: #fff; --text: #1d1d1f; --muted: #6e6e73;
-    --accent: #2e7d32; --accent-d: #1b5e20; --danger: #c62828; --line: #dcdcd8;
+    --bg: #fbf7ee; --card: #ffffff; --ink: #25343f; --muted: #6b7882; --line: #e3dccb;
+    --blau: #2f8fd8; --blau-d: #1f6fb0; --blau-h: #dcedfb;
+    --gruen: #2e9b4e; --gruen-d: #1f7a3a; --gruen-h: #dff3e4;
+    --gelb: #ffd23f; --gelb-h: #fff3c4;
+    --orange: #f39a1e; --orange-h: #fde9c9;
+    --anzeige: "Grandstander", "Andika", system-ui, sans-serif;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; margin: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
-    background: var(--bg); color: var(--text);
+    font-family: "Andika", system-ui, sans-serif; font-size: 20px;
+    background: var(--bg); color: var(--ink);
     -webkit-user-select: none; user-select: none; touch-action: manipulation;
-    display: flex; flex-direction: column;
+    display: flex; flex-direction: column; overflow: hidden;
     padding-top: env(safe-area-inset-top);
   }
   button { font: inherit; color: inherit; border: 0; cursor: pointer; }
-  header {
-    display: flex; gap: 8px; padding: 10px 14px; background: var(--card);
-    border-bottom: 1px solid var(--line); align-items: center;
-  }
-  header h1 { font-size: 20px; margin: 0 auto 0 0; }
-  .tab { padding: 10px 22px; border-radius: 10px; background: #eee; font-weight: 600; font-size: 17px; }
-  .tab.active { background: var(--accent); color: #fff; }
-  main { flex: 1; overflow-y: auto; padding: 14px; -webkit-overflow-scrolling: touch; }
+  button:disabled { opacity: .4; cursor: default; }
   .hidden { display: none !important; }
+  svg { display: block; }
 
-  /* Kachel-Raster */
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+  /* ---------- Kopfzeile ---------- */
+  header {
+    display: flex; align-items: center; gap: 16px; padding: 10px 16px;
+    background: var(--card); border-bottom: 3px solid var(--line); min-height: 76px;
+  }
+  header h1 { font-family: var(--anzeige); font-size: 34px; margin: 0; }
+  .homebtn {
+    display: flex; align-items: center; gap: 10px; padding: 12px 22px 12px 16px; border-radius: 18px;
+    background: var(--blau-h); color: var(--blau-d); font-family: var(--anzeige); font-weight: 800; font-size: 24px;
+  }
+  .homebtn:active { background: #c3def5; }
+
+  /* ---------- Knöpfe ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 18px 30px; border-radius: 18px; font-family: var(--anzeige); font-size: 26px; font-weight: 800;
+    background: #ece6d6; color: var(--ink);
+  }
+  .btn:active:not(:disabled) { transform: scale(.97); }
+  .btn.gruen { background: var(--gruen); color: #fff; }
+  .btn.gruen:active:not(:disabled) { background: var(--gruen-d); }
+  .btn.blau { background: var(--blau); color: #fff; }
+  .btn.orange { background: var(--orange-h); color: #8a5300; }
+  .btn.gross { font-size: 34px; padding: 24px 44px; border-radius: 22px; }
+
+  /* ---------- Startbildschirm ---------- */
+  #sStart { flex: 1; display: flex; flex-direction: column; padding: 22px; gap: 22px; overflow-y: auto; }
+  .start-titel { text-align: center; font-family: var(--anzeige); font-size: clamp(34px, 5vw, 52px); font-weight: 900; margin: 6px 0 0; }
+  .start-frage { text-align: center; font-size: 26px; color: var(--muted); margin: -10px 0 0; }
+  .start-karten { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; min-height: 0; }
+  .start-karte {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    border-radius: 32px; padding: 24px; text-align: center; box-shadow: 0 6px 0 rgba(0,0,0,.12);
+  }
+  .start-karte:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,.12); }
+  .start-karte svg { width: min(260px, 40vh); height: auto; }
+  .start-karte b { font-family: var(--anzeige); font-size: clamp(38px, 5.5vw, 60px); font-weight: 900; line-height: 1.05; }
+  .start-karte span { font-size: 24px; }
+  .start-karte.kasse { background: var(--blau); color: #fff; }
+  .start-karte.artikel { background: var(--gelb); color: var(--ink); }
+  @media (max-width: 700px) { .start-karten { grid-template-columns: 1fr; } .start-karte svg { width: min(160px, 22vh); } }
+
+  /* ---------- Kasse ---------- */
+  #sKasse { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  #kasseMain { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }
   .tile {
-    position: relative; background: var(--card); border-radius: 16px; overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,.12); text-align: left; padding: 0; display: block; width: 100%;
+    position: relative; background: var(--card); border-radius: 22px; overflow: hidden; display: block; width: 100%;
+    box-shadow: 0 4px 0 var(--line); text-align: left; padding: 0; border: 4px solid transparent;
   }
   .tile:active { transform: scale(.97); }
-  .tile .ph {
-    width: 100%; aspect-ratio: 4/3; background: #e8e8e4 center/cover no-repeat;
-    display: flex; align-items: center; justify-content: center; font-size: 44px; color: #b5b5ae;
-  }
-  .tile .info { padding: 8px 10px 10px; }
-  .tile .name { font-weight: 600; font-size: 17px; line-height: 1.2; }
-  .tile .price { color: var(--muted); font-size: 16px; margin-top: 2px; }
-  .tile.sel { outline: 4px solid var(--accent); }
+  .tile .ph { width: 100%; aspect-ratio: 4/3; background: #efe9da center/cover no-repeat; display: flex; align-items: center; justify-content: center; color: #b9b19c; }
+  .tile .ph svg { width: 56px; height: 56px; }
+  .tile .info { padding: 10px 14px 14px; }
+  .tile .name { font-weight: 700; font-size: 24px; line-height: 1.15; }
+  .tile .price { display: inline-block; margin-top: 6px; background: var(--gelb-h); border-radius: 10px; padding: 2px 12px; font-family: var(--anzeige); font-weight: 800; font-size: 24px; }
+  .tile.sel { border-color: var(--gruen); }
   .badge {
-    position: absolute; top: 8px; right: 8px; min-width: 38px; height: 38px; padding: 0 10px;
-    border-radius: 19px; background: var(--accent); color: #fff; font-weight: 700; font-size: 20px;
-    display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px rgba(0,0,0,.3);
+    position: absolute; top: 10px; right: 10px; min-width: 56px; height: 56px; padding: 0 14px; border-radius: 28px;
+    background: var(--gruen); color: #fff; font-family: var(--anzeige); font-weight: 900; font-size: 32px;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,.35);
   }
   .minus {
-    position: absolute; top: 8px; left: 8px; width: 44px; height: 44px; border-radius: 22px;
-    background: rgba(255,255,255,.95); color: var(--danger); font-size: 28px; font-weight: 700;
-    box-shadow: 0 1px 4px rgba(0,0,0,.3); line-height: 1;
+    position: absolute; top: 10px; left: 10px; width: 56px; height: 56px; border-radius: 28px;
+    background: #fff; color: var(--ink); font-family: var(--anzeige); font-size: 40px; font-weight: 900; line-height: 52px;
+    text-align: center; box-shadow: 0 2px 6px rgba(0,0,0,.35);
   }
-  .empty { text-align: center; color: var(--muted); margin-top: 60px; font-size: 18px; line-height: 1.5; }
-
-  /* Fußleiste Kasse */
+  .empty { text-align: center; color: var(--muted); margin: 60px auto 0; font-size: 26px; line-height: 1.5; max-width: 520px; }
   #bar {
-    display: flex; align-items: center; gap: 12px; padding: 12px 14px;
-    padding-bottom: calc(12px + env(safe-area-inset-bottom));
-    background: var(--card); border-top: 1px solid var(--line);
+    display: flex; align-items: center; gap: 16px; padding: 14px 18px; padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    background: var(--card); border-top: 3px solid var(--line);
   }
-  #total { font-size: 34px; font-weight: 800; margin-right: auto; font-variant-numeric: tabular-nums; }
-  #total small { display: block; font-size: 14px; font-weight: 500; color: var(--muted); }
-  .btn { padding: 16px 24px; border-radius: 14px; font-size: 19px; font-weight: 700; background: #e6e6e2; }
-  .btn.primary { background: var(--accent); color: #fff; }
-  .btn.primary:active { background: var(--accent-d); }
-  .btn.danger { color: var(--danger); }
-  .btn:disabled { opacity: .35; }
+  #total { margin-right: auto; font-family: var(--anzeige); font-weight: 900; font-size: 54px; font-variant-numeric: tabular-nums; line-height: 1; }
+  #total small { display: block; font-family: "Andika", sans-serif; font-weight: 400; font-size: 20px; color: var(--muted); margin-bottom: 4px; }
 
-  /* Overlay */
-  .overlay {
-    position: fixed; inset: 0; background: var(--bg); z-index: 10; display: flex; flex-direction: column;
-    padding-top: env(safe-area-inset-top);
-  }
-  .overlay .top { padding: 14px 18px; background: var(--card); border-bottom: 1px solid var(--line); display: flex; gap: 24px; align-items: flex-end; flex-wrap: wrap; }
-  .overlay .top div { font-size: 15px; color: var(--muted); }
-  .overlay .top b { display: block; font-size: 40px; color: var(--text); font-variant-numeric: tabular-nums; }
-  .overlay .top b.ok { color: var(--accent); }
-  .overlay .top b.low { color: var(--danger); }
-  .overlay .body { flex: 1; overflow-y: auto; padding: 14px; }
-  .money { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-  .money h3 { grid-column: 1 / -1; margin: 8px 0 0; font-size: 15px; color: var(--muted); font-weight: 600; }
-  .note, .coin {
-    background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.15); font-weight: 700; font-size: 22px;
-    display: flex; align-items: center; justify-content: center; position: relative;
-  }
-  .note { border-radius: 8px; height: 76px; border: 3px solid; }
-  .note:active, .coin:active { transform: scale(.95); }
-  .coin { border-radius: 50%; width: 92px; height: 92px; justify-self: center; border: 4px solid; font-size: 20px; }
-  .cnt {
-    position: absolute; top: -6px; right: -6px; background: var(--text); color: #fff; font-size: 14px;
-    min-width: 24px; height: 24px; border-radius: 12px; display: flex; align-items: center; justify-content: center; padding: 0 6px;
-  }
+  /* ---------- Overlay ---------- */
+  .overlay { position: fixed; inset: 0; background: var(--bg); z-index: 10; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top); }
+  .overlay-head { display: flex; align-items: center; gap: 18px; padding: 10px 16px; background: var(--card); border-bottom: 3px solid var(--line); min-height: 76px; }
+  .overlay-head h2 { font-family: var(--anzeige); font-size: 34px; margin: 0; }
   .overlay .actions {
-    display: flex; gap: 10px; padding: 12px 14px; padding-bottom: calc(12px + env(safe-area-inset-bottom));
-    background: var(--card); border-top: 1px solid var(--line);
+    display: flex; gap: 14px; padding: 14px 18px; padding-bottom: calc(14px + env(safe-area-inset-bottom));
+    background: var(--card); border-top: 3px solid var(--line);
   }
-  .overlay .actions .primary { margin-left: auto; }
+  .overlay .actions .gruen { margin-left: auto; }
 
-  /* Wechselgeld */
-  .done { align-items: center; justify-content: center; text-align: center; padding: 20px; }
-  .done .lbl { font-size: 22px; color: var(--muted); }
-  .done .big { font-size: 96px; font-weight: 800; color: var(--accent); margin: 4px 0 20px; font-variant-numeric: tabular-nums; }
-  .done .big.zero { color: var(--muted); }
-  .breakdown { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 640px; margin-bottom: 30px; }
-  .chip { background: var(--card); border-radius: 12px; padding: 10px 16px; font-size: 24px; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
-  .chip span { color: var(--accent); }
+  /* ---------- Bezahlen ---------- */
+  .pay-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1.1fr; gap: 18px; padding: 18px; }
+  .pay-grid section { min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+  .kosten {
+    background: var(--gelb); border-radius: 22px; padding: 14px 22px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  }
+  .kosten span { font-size: 26px; font-weight: 700; }
+  .kosten b { font-family: var(--anzeige); font-size: 64px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .teller {
+    flex: 1; min-height: 0; background: var(--card); border: 4px dashed #cfc6ae; border-radius: 22px; padding: 14px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .teller-t { font-size: 26px; font-weight: 700; color: var(--blau-d); }
+  .teller-inhalt { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; align-items: center; }
+  .teller-leer { color: var(--muted); font-size: 24px; padding: 14px 6px; }
+  .teller-inhalt button { background: none; padding: 2px; border-radius: 12px; line-height: 0; }
+  .teller-inhalt button:active { transform: scale(.92); opacity: .6; }
+  .teller-hinweis { font-size: 18px; color: var(--muted); }
+  .teller-summe { font-size: 26px; font-weight: 700; display: flex; justify-content: space-between; border-top: 3px solid var(--line); padding-top: 10px; }
+  .teller-summe b { font-family: var(--anzeige); font-size: 36px; font-weight: 900; }
+  .status { border-radius: 18px; padding: 14px 20px; font-family: var(--anzeige); font-weight: 800; font-size: 30px; display: flex; align-items: center; gap: 14px; min-height: 76px; }
+  .status.fehlt { background: var(--orange-h); color: #8a5300; }
+  .status.genug { background: var(--gruen-h); color: var(--gruen-d); }
+  .status.leer { background: #efe9da; color: var(--muted); font-family: "Andika"; font-weight: 400; }
+  .status svg { width: 38px; height: 38px; flex: none; }
 
-  /* Artikel-Verwaltung */
-  .list { display: flex; flex-direction: column; gap: 10px; max-width: 760px; margin: 0 auto; }
-  .row { display: flex; align-items: center; gap: 14px; background: var(--card); border-radius: 14px; padding: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
-  .row .th { width: 72px; height: 54px; border-radius: 8px; background: #e8e8e4 center/cover; flex: none; }
-  .row .t { flex: 1; font-size: 18px; font-weight: 600; }
-  .row .t small { display: block; color: var(--muted); font-weight: 400; font-size: 16px; }
-  .row button { padding: 10px 14px; border-radius: 10px; background: #eee; font-size: 16px; font-weight: 600; }
-  .tools { max-width: 760px; margin: 18px auto 0; display: flex; gap: 10px; flex-wrap: wrap; }
-  .form { max-width: 480px; margin: 0 auto; background: var(--card); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
-  .form label { font-size: 15px; color: var(--muted); font-weight: 600; display: block; margin-bottom: 4px; }
-  .form input[type=text] { width: 100%; font-size: 22px; padding: 12px; border: 2px solid var(--line); border-radius: 10px; -webkit-user-select: text; user-select: text; }
-  .preview { width: 100%; aspect-ratio: 4/3; border-radius: 12px; background: #e8e8e4 center/cover no-repeat; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 18px; text-align: center; padding: 10px; }
-  .form .btns { display: flex; gap: 10px; }
-  .form .btns .primary { margin-left: auto; }
+  .vorrat-box { flex: 1; background: #efe9da; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+  .vorrat-box h3 { margin: 0; font-size: 26px; font-weight: 700; }
+  .vorrat-reihe { display: flex; flex-wrap: wrap; gap: 12px 14px; align-items: center; }
+  .vorrat-reihe.muenzen { gap: 12px 18px; }
+  .vorrat-reihe button { background: none; padding: 4px; border-radius: 14px; line-height: 0; }
+  .vorrat-reihe button:active { transform: scale(.92); background: rgba(255,255,255,.7); }
+  .vorrat-titel { font-size: 20px; color: var(--muted); margin: 0 0 -4px; font-weight: 700; }
+  .geldbild svg { display: block; max-width: 100%; height: auto; }
+  @media (max-width: 900px) {
+    .pay-grid { grid-template-columns: 1fr; overflow-y: auto; }
+    .teller { min-height: 200px; }
+    .vorrat-box { flex: none; overflow: visible; }
+  }
+
+  /* ---------- Rückgeld ---------- */
+  .done { align-items: stretch; }
+  .done-body { flex: 1; overflow-y: auto; padding: 22px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  .rechnung { display: flex; align-items: stretch; justify-content: center; gap: 14px; flex-wrap: wrap; width: 100%; max-width: 900px; }
+  .rechnung .zeichen { align-self: center; font-family: var(--anzeige); font-size: 48px; font-weight: 900; color: var(--muted); }
+  .rbox { background: var(--card); border-radius: 18px; padding: 12px 24px; text-align: center; box-shadow: 0 4px 0 var(--line); min-width: 170px; }
+  .rbox span { display: block; font-size: 22px; color: var(--muted); font-weight: 700; }
+  .rbox b { font-family: var(--anzeige); font-size: 42px; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .rbox.ergebnis { background: var(--gruen); box-shadow: 0 4px 0 var(--gruen-d); }
+  .rbox.ergebnis span, .rbox.ergebnis b { color: #fff; }
+  .rbox.ergebnis b { font-size: 56px; }
+  .rueck-titel { font-family: var(--anzeige); font-size: 36px; font-weight: 900; margin: 6px 0 0; text-align: center; }
+  .rueck { display: flex; flex-wrap: wrap; gap: 22px; justify-content: center; max-width: 1000px; }
+  .gruppe { background: var(--card); border-radius: 22px; padding: 16px 20px 14px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 4px 0 var(--line); }
+  .gruppe .mal { font-family: "Andika", sans-serif; font-weight: 700; font-size: 48px; color: var(--gruen-d); line-height: 1; }
+  .passend { background: var(--gruen-h); color: var(--gruen-d); border-radius: 26px; padding: 26px 40px; font-family: var(--anzeige); font-weight: 900; font-size: 40px; display: flex; align-items: center; gap: 20px; text-align: center; }
+  .passend svg { width: 64px; height: 64px; flex: none; }
+  .done .actions { justify-content: center; }
+  .done .actions .gruen { margin-left: 0; }
+
+  /* ---------- Artikel-Verwaltung ---------- */
+  #sArtikel { flex: 1; overflow-y: auto; padding: 18px; -webkit-overflow-scrolling: touch; }
+  .list { display: flex; flex-direction: column; gap: 14px; max-width: 820px; margin: 18px auto 0; }
+  .row { display: flex; align-items: center; gap: 16px; background: var(--card); border-radius: 20px; padding: 12px; box-shadow: 0 4px 0 var(--line); }
+  .row .th { width: 104px; height: 78px; border-radius: 12px; background: #efe9da center/cover; flex: none; }
+  .row .t { flex: 1; font-size: 26px; font-weight: 700; }
+  .row .t small { display: block; color: var(--muted); font-weight: 400; font-size: 22px; }
+  .row button { padding: 14px 18px; border-radius: 14px; background: #ece6d6; font-size: 22px; font-weight: 700; }
+  .row button.edit { background: var(--blau-h); color: var(--blau-d); }
+  .toprow { max-width: 820px; margin: 0 auto; display: flex; }
+  .form { max-width: 560px; margin: 0 auto; background: var(--card); border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 18px; }
+  .form label { font-size: 22px; font-weight: 700; display: block; margin-bottom: 6px; }
+  .form input[type=text] { width: 100%; font: inherit; font-size: 28px; padding: 14px; border: 3px solid var(--line); border-radius: 14px; -webkit-user-select: text; user-select: text; color: var(--ink); background: #fff; }
+  .form .hinweis { font-size: 18px; color: var(--muted); margin-top: 4px; }
+  .preview { width: 100%; aspect-ratio: 4/3; max-height: 34vh; border-radius: 16px; background: #efe9da center/cover no-repeat; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 22px; text-align: center; padding: 10px; }
+  .form .btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .form .btns .gruen { margin-left: auto; }
+  .form-body { flex: 1; overflow-y: auto; padding: 18px; }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>☕ Café-Kasse</h1>
-  <button class="tab active" id="tabKasse">Kasse</button>
-  <button class="tab" id="tabArtikel">Artikel</button>
+<header id="hdr" class="hidden">
+  <button class="homebtn" id="homeBtn" aria-label="Zum Startbildschirm">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg>Start
+  </button>
+  <h1 id="hdrTitel"></h1>
 </header>
 
+<!-- START -->
+<div id="sStart">
+  <h1 class="start-titel">☕ Schülercafé</h1>
+  <p class="start-frage">Was möchtest du machen?</p>
+  <div class="start-karten">
+    <button class="start-karte kasse" id="goKasse">
+      <svg viewBox="0 0 200 180" fill="none">
+        <rect x="30" y="20" width="140" height="48" rx="10" fill="#fff"/>
+        <rect x="42" y="30" width="116" height="28" rx="6" fill="#bfe1f7"/>
+        <text x="152" y="52" text-anchor="end" font-family="Grandstander, sans-serif" font-weight="900" font-size="26" fill="#1f6fb0">3,50</text>
+        <path d="M22 80h156l14 70c1 6-3 12-9 12H17c-6 0-10-6-9-12z" fill="#fff"/>
+        <g fill="#2f8fd8"><rect x="38" y="94" width="26" height="20" rx="5"/><rect x="74" y="94" width="26" height="20" rx="5"/><rect x="110" y="94" width="26" height="20" rx="5"/><rect x="146" y="94" width="20" height="20" rx="5"/>
+        <rect x="38" y="124" width="26" height="20" rx="5"/><rect x="74" y="124" width="26" height="20" rx="5"/><rect x="110" y="124" width="26" height="20" rx="5"/></g>
+        <rect x="146" y="124" width="20" height="20" rx="5" fill="#2e9b4e"/>
+      </svg>
+      <b>Kasse</b><span>Bestellungen kassieren</span>
+    </button>
+    <button class="start-karte artikel" id="goArtikel">
+      <svg viewBox="0 0 200 180" fill="none">
+        <rect x="18" y="20" width="164" height="124" rx="14" fill="#fff"/>
+        <rect x="30" y="32" width="140" height="100" rx="8" fill="#f6e7a6"/>
+        <circle cx="68" cy="64" r="13" fill="#f39a1e"/>
+        <path d="M30 120l36-34 26 24 30-36 48 46v12H38z" fill="#2e9b4e"/>
+        <circle cx="160" cy="146" r="30" fill="#2f8fd8"/>
+        <path d="M160 130v32M144 146h32" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+      </svg>
+      <b>Artikel</b><span>Speisen und Getränke anlegen</span>
+    </button>
+  </div>
+</div>
+
 <!-- KASSE -->
-<main id="viewKasse"></main>
-<div id="bar">
-  <div id="total"><small id="cnt">0 Artikel</small><span id="totalVal">0,00 €</span></div>
-  <button class="btn danger" id="clearBtn">Alles löschen</button>
-  <button class="btn primary" id="payBtn" disabled>Bezahlen</button>
+<div id="sKasse" class="hidden">
+  <main id="kasseMain"></main>
+  <div id="bar">
+    <div id="total"><small id="cnt">0 Sachen</small><span id="totalVal">0,00 €</span></div>
+    <button class="btn" id="clearBtn">Neu anfangen</button>
+    <button class="btn gruen gross" id="payBtn" disabled>Bezahlen ➜</button>
+  </div>
 </div>
 
 <!-- ARTIKEL -->
-<main id="viewArtikel" class="hidden"></main>
+<div id="sArtikel" class="hidden"></div>
 
 <div id="overlayHost"></div>
 
+<script src="geld.js"></script>
 <script>
 (function () {
   'use strict';
@@ -163,16 +269,15 @@
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 
-  // Stückelung in Cent. Farben grob wie die Euro-Scheine/Münzen.
-  const NOTES = [
-    { v: 5000, c: '#f9a825' }, { v: 2000, c: '#1e88e5' }, { v: 1000, c: '#e53935' }, { v: 500, c: '#78909c' }
-  ];
-  const COINS = [
-    { v: 200, c: '#b0b7bd' }, { v: 100, c: '#d4a017' }, { v: 50, c: '#c9a227' },
-    { v: 20, c: '#c9a227' }, { v: 10, c: '#c9a227' }, { v: 5, c: '#b5651d' }, { v: 2, c: '#b5651d' }, { v: 1, c: '#b5651d' }
-  ];
-  const ALL = NOTES.concat(COINS);
-  const label = v => v >= 100 ? (v / 100) + ' €' : v + ' ct';
+  // Geld (Cent). Bilder kommen aus geld.js (Spielgeld, wie im Kirmes-Kiosk).
+  const SCHEINE = [5000, 2000, 1000, 500];
+  const MUENZEN = [200, 100, 50, 20, 10];
+  const ALLES = SCHEINE.concat(MUENZEN);
+  const istSchein = v => v >= 500;
+  const geldName = v => v >= 100 ? (v / 100) + ' Euro' : v + ' Cent';
+  const geldBild = (v, scheinG, muenzG) => `<span class="geldbild" title="${geldName(v)}">${KirmesGeld.bild(v, istSchein(v) ? scheinG : muenzG)}</span>`;
+  const ICON_HAKEN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10" fill="currentColor" stroke="none" opacity=".15"/><path d="M6.5 12.5l4 4 7-8"/></svg>';
+  const ICON_BILD = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm1 12h14l-4.5-6-3.5 4.5-2-2.5z"/></svg>';
 
   // ---------- Speicher ----------
   const KEY = 'cafe-kasse-artikel-v1';
@@ -180,28 +285,41 @@
   try { items = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { items = []; }
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(items)); }
-    catch (e) { alert('Speicher voll! Bitte Artikel löschen oder kleinere Fotos verwenden.'); }
+    catch (e) { alert('Der Speicher ist voll. Bitte einen Artikel löschen.'); }
   }
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
 
   // ---------- Zustand ----------
-  let cart = {};      // id -> Menge
-  let tab = 'kasse';
-
+  let cart = {};
   const cartTotal = () => items.reduce((s, it) => s + (cart[it.id] || 0) * it.price, 0);
   const cartCount = () => Object.values(cart).reduce((a, b) => a + b, 0);
 
+  // ---------- Bildschirme ----------
+  function show(name) {
+    $('overlayHost').innerHTML = '';
+    $('sStart').classList.toggle('hidden', name !== 'start');
+    $('sKasse').classList.toggle('hidden', name !== 'kasse');
+    $('sArtikel').classList.toggle('hidden', name !== 'artikel');
+    $('hdr').classList.toggle('hidden', name === 'start');
+    $('hdrTitel').textContent = name === 'kasse' ? 'Kasse' : name === 'artikel' ? 'Artikel' : '';
+    if (name === 'kasse') renderKasse();
+    if (name === 'artikel') renderArtikel();
+  }
+  $('goKasse').onclick = () => show('kasse');
+  $('goArtikel').onclick = () => show('artikel');
+  $('homeBtn').onclick = () => show('start');
+
   // ---------- Kasse ----------
   function renderKasse() {
-    const el = $('viewKasse');
+    const el = $('kasseMain');
     if (!items.length) {
-      el.innerHTML = '<div class="empty">Noch keine Artikel.<br>Wechsle oben auf <b>Artikel</b> und lege Speisen und Getränke an.</div>';
+      el.innerHTML = '<div class="empty">Es gibt noch keine Artikel.<br>Gehe zum <b>Start</b> und wähle <b>Artikel</b>.</div>';
     } else {
       el.innerHTML = '<div class="grid">' + items.map(it => {
         const q = cart[it.id] || 0;
         const bg = it.photo ? `style="background-image:url('${it.photo}')"` : '';
         return `<button class="tile ${q ? 'sel' : ''}" data-add="${it.id}">
-          <div class="ph" ${bg}>${it.photo ? '' : '🍽️'}</div>
+          <div class="ph" ${bg}>${it.photo ? '' : ICON_BILD}</div>
           ${q ? `<div class="badge">${q}</div>` : ''}
           <div class="info"><div class="name">${esc(it.name)}</div><div class="price">${fmt(it.price)}</div></div>
           ${q ? `<span class="minus" data-sub="${it.id}">−</span>` : ''}
@@ -213,10 +331,11 @@
   function updateBar() {
     const n = cartCount();
     $('totalVal').textContent = fmt(cartTotal());
-    $('cnt').textContent = n + (n === 1 ? ' Artikel' : ' Artikel');
+    $('cnt').textContent = n === 1 ? '1 Sache' : n + ' Sachen';
     $('payBtn').disabled = n === 0;
+    $('clearBtn').disabled = n === 0;
   }
-  $('viewKasse').addEventListener('click', e => {
+  $('kasseMain').addEventListener('click', e => {
     const sub = e.target.closest('[data-sub]');
     if (sub) {
       e.stopPropagation();
@@ -227,81 +346,125 @@
     const add = e.target.closest('[data-add]');
     if (add) { const id = add.dataset.add; cart[id] = (cart[id] || 0) + 1; renderKasse(); }
   });
-  $('clearBtn').onclick = () => { if (cartCount() && confirm('Bestellung wirklich löschen?')) { cart = {}; renderKasse(); } else if (!cartCount()) { cart = {}; renderKasse(); } };
+  $('clearBtn').onclick = () => { if (confirm('Alles löschen und neu anfangen?')) { cart = {}; renderKasse(); } };
   $('payBtn').onclick = openPayment;
 
   // ---------- Bezahlen ----------
-  function openPayment() {
-    const total = cartTotal();
-    let given = [];   // Liste von Cent-Werten (für Rückgängig)
-    const sum = () => given.reduce((a, b) => a + b, 0);
-    const host = $('overlayHost');
-
-    function draw() {
-      const g = sum(), diff = g - total;
-      const counts = {}; given.forEach(v => counts[v] = (counts[v] || 0) + 1);
-      const btn = (d, cls) => `<button class="${cls}" data-v="${d.v}" style="border-color:${d.c}">${label(d.v)}${counts[d.v] ? `<span class="cnt">${counts[d.v]}</span>` : ''}</button>`;
-      host.innerHTML = `<div class="overlay">
-        <div class="top">
-          <div>Zu zahlen<b>${fmt(total)}</b></div>
-          <div>Gegeben<b>${fmt(g)}</b></div>
-          <div>${diff >= 0 ? 'Wechselgeld' : 'Es fehlen'}<b class="${diff >= 0 ? 'ok' : 'low'}">${fmt(Math.abs(diff))}</b></div>
-        </div>
-        <div class="body"><div class="money">
-          <h3>Scheine</h3>${NOTES.map(d => btn(d, 'note')).join('')}
-          <h3>Münzen</h3>${COINS.map(d => btn(d, 'coin')).join('')}
-        </div></div>
-        <div class="actions">
-          <button class="btn" id="pCancel">Zurück</button>
-          <button class="btn" id="pExact">Passend</button>
-          <button class="btn" id="pUndo" ${given.length ? '' : 'disabled'}>↶ Letzte</button>
-          <button class="btn danger" id="pReset" ${given.length ? '' : 'disabled'}>Zurücksetzen</button>
-          <button class="btn primary" id="pOk" ${diff >= 0 && given.length ? '' : 'disabled'}>Bestätigen</button>
-        </div></div>`;
-      host.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { given.push(+b.dataset.v); draw(); });
-      $('pCancel').onclick = () => host.innerHTML = '';
-      $('pExact').onclick = () => { given = [total]; draw(); };
-      $('pUndo').onclick = () => { given.pop(); draw(); };
-      $('pReset').onclick = () => { given = []; draw(); };
-      $('pOk').onclick = () => showChange(g - total);
-    }
-    // „Passend“ speichert den Betrag als einen Posten, der nicht in einer Stückelung steht – Anzeige reicht.
-    draw();
-  }
-
-  function breakdown(c) {
+  function greedy(c) {
     const out = [];
-    for (const d of ALL) { const n = Math.floor(c / d.v); if (n) { out.push({ v: d.v, n }); c -= n * d.v; } }
+    for (const v of ALLES) { let n = Math.floor(c / v); c -= n * v; while (n--) out.push(v); }
+    if (c > 0) out.push(10);   // Rest unter 10 ct (nur bei ungewöhnlichen Preisen): eine 10-ct-Münze mehr
     return out;
   }
 
-  function showChange(change) {
-    const parts = breakdown(change);
+  function openPayment() {
+    const total = cartTotal();
+    let given = [];
+    const sum = () => given.reduce((a, b) => a + b, 0);
+    const host = $('overlayHost');
+
+    host.innerHTML = `<div class="overlay">
+      <div class="overlay-head">
+        <button class="homebtn" id="pBack"><svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg>Zurück</button>
+        <h2>Bezahlen</h2>
+      </div>
+      <div class="pay-grid">
+        <section>
+          <div class="kosten"><span>Das kostet:</span><b>${fmt(total)}</b></div>
+          <div class="teller">
+            <div class="teller-t">Das gibt der Kunde:</div>
+            <div class="teller-inhalt" id="tInhalt"></div>
+            <div class="teller-hinweis" id="tHinweis">Tippe aufs Geld, um es wieder wegzunehmen.</div>
+            <div class="teller-summe"><span>Zusammen:</span><b id="tSumme"></b></div>
+          </div>
+          <div class="status" id="tStatus"></div>
+        </section>
+        <section>
+          <div class="vorrat-box">
+            <h3>Tippe das Geld an, das der Kunde gibt:</h3>
+            <p class="vorrat-titel">Scheine</p>
+            <div class="vorrat-reihe">${SCHEINE.map(v => `<button data-v="${v}" aria-label="${geldName(v)}">${geldBild(v, 2.5, 3)}</button>`).join('')}</div>
+            <p class="vorrat-titel">Münzen</p>
+            <div class="vorrat-reihe muenzen">${MUENZEN.map(v => `<button data-v="${v}" aria-label="${geldName(v)}">${geldBild(v, 2.5, 3.2)}</button>`).join('')}</div>
+          </div>
+        </section>
+      </div>
+      <div class="actions">
+        <button class="btn orange" id="pExact">Genau passend</button>
+        <button class="btn" id="pReset">Alles wegnehmen</button>
+        <button class="btn gruen gross" id="pOk">Fertig ➜</button>
+      </div>
+    </div>`;
+
+    function update() {
+      const g = sum(), diff = g - total;
+      const sorted = given.slice().sort((a, b) => b - a);
+      $('tInhalt').innerHTML = sorted.length
+        ? sorted.map(v => `<button data-weg="${v}" aria-label="${geldName(v)} wegnehmen">${geldBild(v, 1.9, 2.4)}</button>`).join('')
+        : '<div class="teller-leer">Noch nichts. Tippe rechts das Geld an.</div>';
+      $('tHinweis').classList.toggle('hidden', !given.length);
+      $('tSumme').textContent = fmt(g);
+      const st = $('tStatus');
+      if (!given.length) { st.className = 'status leer'; st.textContent = 'Wie viel Geld gibt der Kunde?'; }
+      else if (diff < 0) { st.className = 'status fehlt'; st.innerHTML = `Es fehlen noch ${fmt(-diff)}`; }
+      else { st.className = 'status genug'; st.innerHTML = ICON_HAKEN + 'Das ist genug Geld!'; }
+      $('pOk').disabled = !(given.length && diff >= 0);
+      $('pReset').disabled = !given.length;
+    }
+
+    host.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { given.push(+b.dataset.v); update(); });
+    $('tInhalt').onclick = e => {
+      const b = e.target.closest('[data-weg]'); if (!b) return;
+      const i = given.indexOf(+b.dataset.weg); if (i >= 0) given.splice(i, 1); update();
+    };
+    $('pBack').onclick = () => host.innerHTML = '';
+    $('pExact').onclick = () => { given = greedy(total); update(); };
+    $('pReset').onclick = () => { given = []; update(); };
+    $('pOk').onclick = () => showChange(sum(), total);
+    update();
+  }
+
+  // ---------- Rückgeld ----------
+  function showChange(g, total) {
+    const change = g - total;
+    const parts = []; let rest = change;
+    for (const v of ALLES) { const n = Math.floor(rest / v); if (n) { parts.push({ v, n }); rest -= n * v; } }
     $('overlayHost').innerHTML = `<div class="overlay done">
-      <div class="lbl">Wechselgeld</div>
-      <div class="big ${change ? '' : 'zero'}">${fmt(change)}</div>
-      <div class="breakdown">${change ? parts.map(p => `<div class="chip"><span>${p.n}×</span> ${label(p.v)}</div>`).join('') : '<div class="chip">Passend – nichts zurückgeben</div>'}</div>
-      <button class="btn primary" id="next" style="font-size:26px;padding:22px 48px">Nächster Kunde</button>
+      <div class="overlay-head"><h2>Rückgeld</h2></div>
+      <div class="done-body">
+        <div class="rechnung">
+          <div class="rbox"><span>Der Kunde gibt</span><b>${fmt(g)}</b></div>
+          <div class="zeichen">−</div>
+          <div class="rbox"><span>Es kostet</span><b>${fmt(total)}</b></div>
+          <div class="zeichen">=</div>
+          <div class="rbox ergebnis"><span>Rückgeld</span><b>${fmt(change)}</b></div>
+        </div>
+        ${change > 0
+          ? `<h3 class="rueck-titel">Das bekommt der Kunde zurück:</h3>
+             <div class="rueck">${parts.map(p => `<div class="gruppe">${geldBild(p.v, 3, 3.8)}<div class="mal">${p.n} ×</div></div>`).join('')}</div>`
+          : `<div class="passend">${ICON_HAKEN}Genau passend!<br>Es gibt kein Rückgeld.</div>`}
+      </div>
+      <div class="actions"><button class="btn gruen gross" id="next">Nächster Kunde ➜</button></div>
     </div>`;
     $('next').onclick = () => { cart = {}; $('overlayHost').innerHTML = ''; renderKasse(); };
   }
 
   // ---------- Artikel-Verwaltung ----------
   function renderArtikel() {
-    const el = $('viewArtikel');
-    el.innerHTML = `<div class="list">
+    const el = $('sArtikel');
+    el.innerHTML = `<div class="toprow"><button class="btn gruen gross" id="newItem">＋ Neuer Artikel</button></div>
+    <div class="list">
       ${items.length ? items.map((it, i) => `<div class="row">
         <div class="th" ${it.photo ? `style="background-image:url('${it.photo}')"` : ''}></div>
         <div class="t">${esc(it.name)}<small>${fmt(it.price)}</small></div>
-        <button data-up="${i}" ${i === 0 ? 'disabled' : ''}>↑</button>
-        <button data-down="${i}" ${i === items.length - 1 ? 'disabled' : ''}>↓</button>
-        <button data-edit="${it.id}">Bearbeiten</button>
-      </div>`).join('') : '<div class="empty">Noch keine Artikel angelegt.</div>'}
-    </div>
-    <div class="tools"><button class="btn primary" id="newItem">＋ Neuer Artikel</button></div>`;
+        <button data-up="${i}" ${i === 0 ? 'disabled' : ''} aria-label="nach oben">↑</button>
+        <button data-down="${i}" ${i === items.length - 1 ? 'disabled' : ''} aria-label="nach unten">↓</button>
+        <button class="edit" data-edit="${it.id}">Ändern</button>
+      </div>`).join('') : '<div class="empty">Noch keine Artikel.<br>Tippe auf <b>Neuer Artikel</b>.</div>'}
+    </div>`;
     $('newItem').onclick = () => editItem(null);
   }
-  $('viewArtikel').addEventListener('click', e => {
+  $('sArtikel').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     if (b.dataset.edit) editItem(b.dataset.edit);
     const mv = (i, d) => { const j = i + d; if (j < 0 || j >= items.length) return; [items[i], items[j]] = [items[j], items[i]]; save(); renderArtikel(); };
@@ -309,19 +472,21 @@
     if (b.dataset.down) mv(+b.dataset.down, 1);
   });
 
+  // Preise nur in 10-Cent-Schritten (kleinste Münze im Spielgeld: 10 Cent)
   function parsePrice(s) {
     const n = parseFloat(String(s).replace('€', '').replace(',', '.').trim());
-    return isFinite(n) && n >= 0 ? Math.round(n * 100) : null;
+    if (!isFinite(n) || n < 0) return null;
+    const c = Math.round(n * 100);
+    return c % 10 === 0 ? c : null;
   }
 
   function resizePhoto(file) {
     return new Promise((res, rej) => {
       const img = new Image(), url = URL.createObjectURL(file);
       img.onload = () => {
-        const W = 480, H = 360, r = Math.max(W / img.width, H / img.height);   // zuschneiden auf 4:3
+        const W = 480, H = 360, r = Math.max(W / img.width, H / img.height);
         const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-        const ctx = cv.getContext('2d');
-        const w = img.width * r, h = img.height * r;
+        const ctx = cv.getContext('2d'), w = img.width * r, h = img.height * r;
         ctx.drawImage(img, (W - w) / 2, (H - h) / 2, w, h);
         URL.revokeObjectURL(url);
         res(cv.toDataURL('image/jpeg', 0.72));
@@ -334,22 +499,26 @@
     const it = id ? items.find(x => x.id === id) : { id: uid(), name: '', price: 0, photo: '' };
     let photo = it.photo;
     const host = $('overlayHost');
-    host.innerHTML = `<div class="overlay"><div class="body"><div class="form">
-      <div class="preview" id="prev" ${photo ? `style="background-image:url('${photo}')"` : ''}>${photo ? '' : 'Noch kein Foto'}</div>
-      <input type="file" id="file" accept="image/*" class="hidden">
-      <button class="btn" id="pick">📷 Foto aufnehmen / auswählen</button>
-      <div><label>Name</label><input type="text" id="fName" value="${esc(it.name)}" placeholder="z. B. Käsebrötchen"></div>
-      <div><label>Preis in Euro</label><input type="text" id="fPrice" inputmode="decimal" value="${it.name ? (it.price / 100).toFixed(2).replace('.', ',') : ''}" placeholder="z. B. 1,50"></div>
-      <div class="btns">
-        ${id ? '<button class="btn danger" id="fDel">Löschen</button>' : ''}
-        <button class="btn" id="fCancel">Abbrechen</button>
-        <button class="btn primary" id="fSave">Speichern</button>
-      </div></div></div></div>`;
+    host.innerHTML = `<div class="overlay">
+      <div class="overlay-head"><h2>${id ? 'Artikel ändern' : 'Neuer Artikel'}</h2></div>
+      <div class="form-body"><div class="form">
+        <div class="preview" id="prev" ${photo ? `style="background-image:url('${photo}')"` : ''}>${photo ? '' : 'Noch kein Foto'}</div>
+        <input type="file" id="file" accept="image/*" class="hidden">
+        <button class="btn blau" id="pick">📷 Foto machen</button>
+        <div><label>Name</label><input type="text" id="fName" value="${esc(it.name)}" placeholder="z. B. Käsebrötchen"></div>
+        <div><label>Preis in Euro</label><input type="text" id="fPrice" inputmode="decimal" value="${it.name ? (it.price / 100).toFixed(2).replace('.', ',') : ''}" placeholder="z. B. 1,50">
+          <div class="hinweis">Nur in 10-Cent-Schritten, z. B. 1,20 oder 1,50.</div></div>
+        <div class="btns">
+          ${id ? '<button class="btn" id="fDel">Löschen</button>' : ''}
+          <button class="btn" id="fCancel">Abbrechen</button>
+          <button class="btn gruen" id="fSave">Speichern</button>
+        </div>
+      </div></div></div>`;
     $('pick').onclick = () => $('file').click();
     $('file').onchange = async e => {
       const f = e.target.files[0]; if (!f) return;
       try { photo = await resizePhoto(f); const p = $('prev'); p.style.backgroundImage = `url('${photo}')`; p.textContent = ''; }
-      catch (err) { alert('Foto konnte nicht geladen werden.'); }
+      catch (err) { alert('Das Foto konnte nicht geladen werden.'); }
     };
     $('fCancel').onclick = () => host.innerHTML = '';
     if (id) $('fDel').onclick = () => {
@@ -359,28 +528,14 @@
     $('fSave').onclick = () => {
       const name = $('fName').value.trim(), price = parsePrice($('fPrice').value);
       if (!name) { alert('Bitte einen Namen eingeben.'); return; }
-      if (price === null) { alert('Bitte einen gültigen Preis eingeben, z. B. 1,50'); return; }
+      if (price === null) { alert('Bitte einen Preis in 10-Cent-Schritten eingeben, z. B. 1,50'); return; }
       it.name = name; it.price = price; it.photo = photo;
       if (!id) items.push(it);
       save(); host.innerHTML = ''; renderArtikel();
     };
   }
 
-  // ---------- Tabs ----------
-  function setTab(t) {
-    tab = t;
-    $('tabKasse').classList.toggle('active', t === 'kasse');
-    $('tabArtikel').classList.toggle('active', t === 'artikel');
-    $('viewKasse').classList.toggle('hidden', t !== 'kasse');
-    $('bar').classList.toggle('hidden', t !== 'kasse');
-    $('viewArtikel').classList.toggle('hidden', t !== 'artikel');
-    if (t === 'kasse') renderKasse(); else renderArtikel();
-  }
-  $('tabKasse').onclick = () => setTab('kasse');
-  $('tabArtikel').onclick = () => setTab('artikel');
-
-  setTab(items.length ? 'kasse' : 'artikel');
-
+  show('start');
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
 </script>
