@@ -124,8 +124,7 @@
   .overlay .actions .gruen { margin-left: auto; }
 
   /* ---------- Bezahlen ---------- */
-  .pay-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1.1fr; gap: 18px; padding: 18px; }
-  .pay-grid section { min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+  .pay-grid { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 18px; width: 100%; max-width: 960px; margin: 0 auto; }
   .kosten {
     background: var(--gelb); border-radius: 22px; padding: 14px 22px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
   }
@@ -138,7 +137,7 @@
   .teller-t { font-size: 26px; font-weight: 700; color: var(--blau-d); }
   .teller-inhalt { flex: 1; overflow-y: auto; display: flex; flex-wrap: wrap; gap: 10px; align-content: flex-start; align-items: center; }
   .teller-leer { color: var(--muted); font-size: 24px; padding: 14px 6px; }
-  .teller-inhalt button { background: none; padding: 2px; border-radius: 12px; line-height: 0; }
+  .teller-inhalt button { background: none; padding: 3px; border-radius: 12px; line-height: 0; }
   .teller-inhalt button:active { transform: scale(.92); opacity: .6; }
   .teller-hinweis { font-size: 18px; color: var(--muted); }
   .teller-summe { font-size: 26px; font-weight: 700; display: flex; justify-content: space-between; border-top: 3px solid var(--line); padding-top: 10px; }
@@ -149,19 +148,30 @@
   .status.leer { background: #efe9da; color: var(--muted); font-family: "Andika"; font-weight: 400; }
   .status svg { width: 38px; height: 38px; flex: none; }
 
-  .vorrat-box { flex: 1; background: #efe9da; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
-  .vorrat-box h3 { margin: 0; font-size: 26px; font-weight: 700; }
   .vorrat-reihe { display: flex; flex-wrap: wrap; gap: 12px 14px; align-items: center; }
   .vorrat-reihe.muenzen { gap: 12px 18px; }
   .vorrat-reihe button { background: none; padding: 4px; border-radius: 14px; line-height: 0; }
   .vorrat-reihe button:active { transform: scale(.92); background: rgba(255,255,255,.7); }
   .vorrat-titel { font-size: 20px; color: var(--muted); margin: 0 0 -4px; font-weight: 700; }
   .geldbild svg { display: block; max-width: 100%; height: auto; }
-  @media (max-width: 900px) {
-    .pay-grid { grid-template-columns: 1fr; overflow-y: auto; }
-    .teller { min-height: 200px; }
-    .vorrat-box { flex: none; overflow: visible; }
+  /* Pop-up: Geld auswählen */
+  .popup-bg { position: fixed; inset: 0; background: rgba(37,52,63,.55); z-index: 20; display: flex; align-items: center; justify-content: center; padding: 14px; }
+  .popup { background: var(--bg); border-radius: 30px; width: 100%; max-width: 1000px; max-height: 100%; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,.4); }
+  .popup-kopf { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 24px; background: var(--blau); color: #fff; }
+  .popup-kopf h3 { margin: 0; font-family: var(--anzeige); font-size: 34px; font-weight: 900; }
+  .popup-kopf .sum { font-size: 22px; text-align: right; line-height: 1.1; }
+  .popup-kopf .sum b { display: block; font-family: var(--anzeige); font-size: 38px; font-weight: 900; }
+  .popup-body { flex: 1; overflow-y: auto; padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; }
+  .popup-fuss { display: flex; gap: 14px; padding: 14px 22px; background: var(--card); border-top: 3px solid var(--line); }
+  .popup-fuss .gruen { margin-left: auto; }
+  .vorrat-reihe button { position: relative; }
+  .vorrat-reihe .cnt {
+    position: absolute; top: -4px; right: -4px; min-width: 40px; height: 40px; padding: 0 10px; border-radius: 20px;
+    background: var(--gruen); color: #fff; font-family: var(--anzeige); font-weight: 900; font-size: 24px; line-height: 40px; text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,.35);
   }
+  .btn { white-space: nowrap; }
+  @media (max-width: 700px) { .btn.gross { font-size: 24px; padding: 18px 20px; } .btn { font-size: 22px; padding: 16px 18px; } .overlay .actions, .popup-fuss { flex-wrap: wrap; } .kosten b { font-size: 48px; } }
 
   /* ---------- Rückgeld ---------- */
   .done { align-items: stretch; }
@@ -296,7 +306,7 @@
 
   // ---------- Bildschirme ----------
   function show(name) {
-    $('overlayHost').innerHTML = '';
+    $('overlayHost').innerHTML = ''; document.querySelectorAll('.popup-bg').forEach(n => n.remove());
     $('sStart').classList.toggle('hidden', name !== 'start');
     $('sKasse').classList.toggle('hidden', name !== 'kasse');
     $('sArtikel').classList.toggle('hidden', name !== 'artikel');
@@ -369,29 +379,18 @@
         <h2>Bezahlen</h2>
       </div>
       <div class="pay-grid">
-        <section>
-          <div class="kosten"><span>Das kostet:</span><b>${fmt(total)}</b></div>
-          <div class="teller">
-            <div class="teller-t">Das gibt der Kunde:</div>
-            <div class="teller-inhalt" id="tInhalt"></div>
-            <div class="teller-hinweis" id="tHinweis">Tippe aufs Geld, um es wieder wegzunehmen.</div>
-            <div class="teller-summe"><span>Zusammen:</span><b id="tSumme"></b></div>
-          </div>
-          <div class="status" id="tStatus"></div>
-        </section>
-        <section>
-          <div class="vorrat-box">
-            <h3>Tippe das Geld an, das der Kunde gibt:</h3>
-            <p class="vorrat-titel">Scheine</p>
-            <div class="vorrat-reihe">${SCHEINE.map(v => `<button data-v="${v}" aria-label="${geldName(v)}">${geldBild(v, 2.5, 3)}</button>`).join('')}</div>
-            <p class="vorrat-titel">Münzen</p>
-            <div class="vorrat-reihe muenzen">${MUENZEN.map(v => `<button data-v="${v}" aria-label="${geldName(v)}">${geldBild(v, 2.5, 3.2)}</button>`).join('')}</div>
-          </div>
-        </section>
+        <div class="kosten"><span>Das kostet:</span><b>${fmt(total)}</b></div>
+        <div class="teller">
+          <div class="teller-t">Das gibt der Kunde:</div>
+          <div class="teller-inhalt" id="tInhalt"></div>
+          <div class="teller-hinweis" id="tHinweis">Tippe aufs Geld, um es wieder wegzunehmen.</div>
+          <div class="teller-summe"><span>Zusammen:</span><b id="tSumme"></b></div>
+        </div>
+        <div class="status" id="tStatus"></div>
       </div>
       <div class="actions">
         <button class="btn orange" id="pExact">Genau passend</button>
-        <button class="btn" id="pReset">Alles wegnehmen</button>
+        <button class="btn blau gross" id="pAdd">＋ Geld wählen</button>
         <button class="btn gruen gross" id="pOk">Fertig ➜</button>
       </div>
     </div>`;
@@ -400,8 +399,8 @@
       const g = sum(), diff = g - total;
       const sorted = given.slice().sort((a, b) => b - a);
       $('tInhalt').innerHTML = sorted.length
-        ? sorted.map(v => `<button data-weg="${v}" aria-label="${geldName(v)} wegnehmen">${geldBild(v, 1.9, 2.4)}</button>`).join('')
-        : '<div class="teller-leer">Noch nichts. Tippe rechts das Geld an.</div>';
+        ? sorted.map(v => `<button data-weg="${v}" aria-label="${geldName(v)} wegnehmen">${geldBild(v, 2.3, 3)}</button>`).join('')
+        : '<div class="teller-leer">Noch nichts. Tippe auf <b>Geld wählen</b>.</div>';
       $('tHinweis').classList.toggle('hidden', !given.length);
       $('tSumme').textContent = fmt(g);
       const st = $('tStatus');
@@ -409,17 +408,47 @@
       else if (diff < 0) { st.className = 'status fehlt'; st.innerHTML = `Es fehlen noch ${fmt(-diff)}`; }
       else { st.className = 'status genug'; st.innerHTML = ICON_HAKEN + 'Das ist genug Geld!'; }
       $('pOk').disabled = !(given.length && diff >= 0);
-      $('pReset').disabled = !given.length;
     }
 
-    host.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { given.push(+b.dataset.v); update(); });
+    // Pop-up: nur das Geld, groß
+    function geldWaehlen() {
+      const bg = document.createElement('div');
+      bg.className = 'popup-bg';
+      const knopf = v => `<button data-v="${v}" aria-label="${geldName(v)}">${geldBild(v, ...(window.innerWidth >= 900 ? [3.6, 4.6] : [3, 3.8]))}<span class="cnt hidden"></span></button>`;
+      bg.innerHTML = `<div class="popup">
+        <div class="popup-kopf"><h3>Tippe auf das Geld</h3><div class="sum">Gegeben<b id="pSum"></b></div></div>
+        <div class="popup-body">
+          <div class="vorrat-reihe">${SCHEINE.map(knopf).join('')}</div>
+          <div class="vorrat-reihe muenzen">${MUENZEN.map(knopf).join('')}</div>
+        </div>
+        <div class="popup-fuss">
+          <button class="btn" id="pUndo">↶ Eins zurück</button>
+          <button class="btn gruen gross" id="pClose">Fertig ✓</button>
+        </div>
+      </div>`;
+      document.body.appendChild(bg);
+      const refresh = () => {
+        $('pSum').textContent = fmt(sum());
+        bg.querySelectorAll('[data-v]').forEach(b => {
+          const n = given.filter(v => v === +b.dataset.v).length, c = b.querySelector('.cnt');
+          c.textContent = n; c.classList.toggle('hidden', !n);
+        });
+        $('pUndo').disabled = !given.length;
+      };
+      bg.querySelectorAll('[data-v]').forEach(b => b.onclick = () => { given.push(+b.dataset.v); refresh(); update(); });
+      $('pUndo').onclick = () => { given.pop(); refresh(); update(); };
+      $('pClose').onclick = () => bg.remove();
+      refresh();
+    }
+
     $('tInhalt').onclick = e => {
-      const b = e.target.closest('[data-weg]'); if (!b) return;
-      const i = given.indexOf(+b.dataset.weg); if (i >= 0) given.splice(i, 1); update();
+      const b = e.target.closest('[data-weg]');
+      if (b) { const i = given.indexOf(+b.dataset.weg); if (i >= 0) given.splice(i, 1); update(); }
+      else if (!given.length) geldWaehlen();
     };
     $('pBack').onclick = () => host.innerHTML = '';
+    $('pAdd').onclick = geldWaehlen;
     $('pExact').onclick = () => { given = greedy(total); update(); };
-    $('pReset').onclick = () => { given = []; update(); };
     $('pOk').onclick = () => showChange(sum(), total);
     update();
   }
