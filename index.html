@@ -174,6 +174,9 @@
   .popup-sub .st { font-family: var(--anzeige); font-weight: 800; font-size: 26px; padding: 6px 16px; border-radius: 14px; }
   .popup-sub .st.fehlt { background: var(--orange-h); color: #8a5300; }
   .popup-sub .st.genug { background: var(--gruen-h); color: var(--gruen-d); }
+  .popup-fotos { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 22px; background: #fff7d6; max-height: 96px; overflow-y: auto; }
+  .mini { width: 64px; height: 48px; border-radius: 8px; background: #efe9da center/cover no-repeat; display: flex; align-items: center; justify-content: center; color: #b9b19c; box-shadow: 0 1px 0 var(--line); flex: none; }
+  .mini svg { width: 24px; height: 24px; }
   .popup-x { width: 56px; height: 56px; border-radius: 28px; background: rgba(255,255,255,.25); color: #fff; font-size: 34px; font-weight: 900; line-height: 1; flex: none; }
   .rueck-gross .rbox.ergebnis b { font-size: 76px; line-height: 1.1; }
   .rueck-gross + .rueck-titel { font-size: 30px; margin: 0; }
@@ -407,6 +410,9 @@
       `<div class="bcard"><div class="bph" ${it.photo ? `style="background-image:url('${it.photo}')"` : ''}>${it.photo ? '' : ICON_BILD}</div>
        <div class="bname">${esc(it.name)}</div><div class="bprice">${fmt(it.price)}</div></div>`).join('');
 
+    const minis = items.flatMap(it => Array.from({ length: cart[it.id] || 0 }, () => it)).map(it =>
+      `<div class="mini" title="${esc(it.name)}" ${it.photo ? `style="background-image:url('${it.photo}')"` : ''}>${it.photo ? '' : ICON_BILD}</div>`).join('');
+
     host.innerHTML = `<div class="overlay">
       <div class="overlay-head">
         <button class="homebtn" id="pBack"><svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M20 11H7.8l5.6-5.6L12 4l-8 8 8 8 1.4-1.4L7.8 13H20z"/></svg>Zurück</button>
@@ -428,6 +434,7 @@
       bg.innerHTML = `<div class="popup">
         <div class="popup-kopf"><h3>Das Geld bezahlt der Kunde</h3><div class="sum">Gegeben<b id="pSum"></b></div><button class="popup-x" id="pX" aria-label="Schließen">✕</button></div>
         <div class="popup-sub"><span>Es kostet <b>${fmt(total)}</b></span><span class="st" id="pSt"></span></div>
+        <div class="popup-fotos">${minis}</div>
         <div class="popup-body">
           <div class="vorrat-reihe">${SCHEINE.map(knopf).join('')}</div>
           <div class="vorrat-reihe muenzen">${MUENZEN.map(knopf).join('')}</div>
