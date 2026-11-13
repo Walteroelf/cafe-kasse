@@ -63,6 +63,18 @@
   .btn.orange { background: var(--orange-h); color: #8a5300; }
   .btn.gross { font-size: 34px; padding: 24px 44px; border-radius: 22px; }
 
+  /* Vollbild-Knopf */
+  .fsbtn { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 18px; background: #ece6d6; color: var(--ink); font-family: var(--anzeige); font-weight: 800; font-size: 22px; }
+  .fsbtn:active { background: #ddd5bf; }
+  .fsbtn svg { width: 28px; height: 28px; }
+  .fsbtn .i-aus { display: none; }
+  body.ist-vollbild .fsbtn .i-an { display: none; }
+  body.ist-vollbild .fsbtn .i-aus { display: block; }
+  .start-fs { position: absolute; top: calc(12px + env(safe-area-inset-top)); right: 16px; z-index: 2; }
+  #sStart { position: relative; }
+  .fsbtn.hidden { display: none !important; }
+  @media (max-width: 700px) { .fsbtn span { display: none; } }
+
   /* ---------- Startbildschirm ---------- */
   #sStart { flex: 1; display: flex; flex-direction: column; padding: 22px; gap: 22px; overflow-y: auto; }
   .start-titel { text-align: center; font-family: var(--anzeige); font-size: clamp(34px, 5vw, 52px); font-weight: 900; margin: 6px 0 0; }
@@ -252,10 +264,12 @@
     <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 2 12h3v8h5v-5h4v5h5v-8h3z"/></svg>Start
   </button>
   <h1 id="hdrTitel"></h1>
+  <button class="fsbtn" style="margin-left:auto" aria-label="Vollbild an oder aus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" class="i-an"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" class="i-aus"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span>Vollbild</span></button>
 </header>
 
 <!-- START -->
 <div id="sStart">
+  <button class="fsbtn start-fs" aria-label="Vollbild an oder aus"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" class="i-an"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" class="i-aus"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg><span>Vollbild</span></button>
   <h1 class="start-titel">☕ Schülercafé</h1>
   <p class="start-frage">Was möchtest du machen?</p>
   <div class="start-karten">
@@ -584,6 +598,25 @@
       save(); host.innerHTML = ''; renderArtikel();
     };
   }
+
+  // ---------- Vollbild ----------
+  const de = document.documentElement;
+  const hatVollbild = !!(de.requestFullscreen || de.webkitRequestFullscreen);
+  const schonApp = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  const fsAn = () => document.fullscreenElement || document.webkitFullscreenElement;
+  function fsSync() { document.body.classList.toggle('ist-vollbild', !!fsAn()); }
+  function fsUmschalten() {
+    try {
+      if (fsAn()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else (de.requestFullscreen || de.webkitRequestFullscreen).call(de);
+    } catch (e) {}
+  }
+  document.querySelectorAll('.fsbtn').forEach(b => {
+    if (!hatVollbild || schonApp) b.classList.add('hidden');   // iPhone / schon als App installiert: kein Knopf nötig
+    b.onclick = fsUmschalten;
+  });
+  document.addEventListener('fullscreenchange', fsSync);
+  document.addEventListener('webkitfullscreenchange', fsSync);
 
   show('start');
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
