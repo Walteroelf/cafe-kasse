@@ -18,4 +18,4 @@ Dieses Werk steht unter der Lizenz **Creative Commons Namensnennung – Nicht ko
 
 Diese Bestandteile stammen nicht von Walteroelf und behalten ihre eigene Lizenz:
 
-- **Schriften** (`schriften/`): Andika (SIL International) und Grandstander (Tyler Finck), SIL Open Font License 1.1
+- **Schriften** (`schriften/`): Andika (SIL International), SIL Open Font License 1.1
