@@ -1,5 +1,5 @@
 // Einfacher Offline-Cache: erst Netzwerk (damit Updates ankommen), sonst Cache.
-const CACHE = 'cafe-kasse-v4';
+const CACHE = 'cafe-kasse-v5';
 const FILES = ['./', './index.html', './design.css', './manifest.json', './geld.js', './icon-180.png', './icon-512.png',
   './schriften/andika-400.woff2', './schriften/andika-700.woff2'];
 

@@ -47,7 +47,7 @@ Farbige Schrift auf Weiß: `--gruen-text` #1E6B2A (6,6 : 1), `--orange-text` #9A
 
 Für Flächen und Text gibt es Rollen, die im Dunkelmodus automatisch wechseln:
 `--hg` (Seite), `--karte`, `--flaeche-2`, `--auswahl`, `--text`, `--leise`, `--linie`, `--rand`, `--akzent-text`, `--hinweis-text`.
-Im Dunkelmodus ist der Hintergrund #0B1A2C und die Schrift #E8F1F8. Links und Akzente werden dort Hellblau.
+Im Dunkelmodus ist der Hintergrund ein mittleres Blau (#1D4F80) und die Schrift #E8F1F8. Links und Akzente werden dort ein aufgehelltes Hellblau (#B5E2FC), damit sie auch auf diesem Blau 4,5 : 1 erreichen. Für grüne und orange Schrift gibt es `--gruen-schrift` und `--orange-schrift`, die im Dunkelmodus heller werden.
 Farbflächen (z. B. eine Gerätefarbe) bleiben gleich und behalten dunkelblaue Schrift.
 
 ## Schrift
